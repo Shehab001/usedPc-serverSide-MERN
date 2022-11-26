@@ -22,14 +22,24 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
-console.log(client);
-client.connect((err) => {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  client.close();
-});
+//console.log(client);
+
 async function run() {
   try {
+    const allcategory = client.db("used-pc").collection("category");
+
+    app.get("/allcategory", async (req, res) => {
+      const query = {};
+      const category = await allcategory.find(query).toArray();
+      res.send(category);
+    });
+
+    app.get("/productdetails/:id", async (req, res) => {
+      const id = req.params.id;
+      //console.log(id);
+
+      res.send(id);
+    });
   } finally {
   }
 }
@@ -39,4 +49,4 @@ app.get("/", async (req, res) => {
   res.send("Used-pc server is running");
 });
 
-app.listen(port, () => console.log(`used-pc running on ${port}`));
+app.listen(port, () => console.log(`used-laptop running on ${port}`));
