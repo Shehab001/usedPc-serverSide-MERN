@@ -28,6 +28,7 @@ async function run() {
   try {
     const allcategory = client.db("used-pc").collection("category");
     const productdetails = client.db("used-pc").collection("product");
+    const order = client.db("used-pc").collection("order");
 
     app.get("/allcategory", async (req, res) => {
       const query = {};
@@ -50,6 +51,13 @@ async function run() {
       // console.log(query);
       const product = await productdetails.find(query).toArray();
       res.send(product);
+    });
+
+    app.post("/order", async (req, res) => {
+      const data = req.body;
+      //console.log(data);
+      const result = await order.insertOne(data);
+      res.send(result);
     });
   } finally {
   }
