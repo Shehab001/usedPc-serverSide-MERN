@@ -55,8 +55,25 @@ async function run() {
 
     app.post("/order", async (req, res) => {
       const data = req.body;
-      //console.log(data);
+      // console.log(data.itemname);
       const result = await order.insertOne(data);
+      const result1 = productdetails.updateOne(
+        {
+          name: data.itemname,
+        },
+        {
+          $inc: {
+            left: -1,
+          },
+        }
+      );
+
+      res.send(result);
+    });
+
+    app.get("/advertise", async (req, res) => {
+      const query = { advertise: "yes" };
+      const result = await productdetails.find(query).toArray();
       res.send(result);
     });
   } finally {
