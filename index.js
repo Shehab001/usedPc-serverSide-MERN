@@ -49,7 +49,12 @@ async function run() {
 
       const query = { name: name };
       // console.log(query);
-      const product = await productdetails.find(query).toArray();
+      const product = await productdetails
+        .find({
+          $and: [{ name: name }, { left: { $gt: 0 } }],
+        })
+        .toArray();
+      //const product = await productdetails.find(query).toArray();
       res.send(product);
     });
 
