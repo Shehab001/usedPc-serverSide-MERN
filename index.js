@@ -29,6 +29,7 @@ async function run() {
     const allcategory = client.db("used-pc").collection("category");
     const productdetails = client.db("used-pc").collection("product");
     const order = client.db("used-pc").collection("order");
+    const saveuser = client.db("used-pc").collection("user");
 
     app.get("/allcategory", async (req, res) => {
       const query = {};
@@ -60,11 +61,13 @@ async function run() {
 
     app.post("/order", async (req, res) => {
       const data = req.body;
-      // console.log(data.itemname);
+      // console.log(data);
       const result = await order.insertOne(data);
+      query = {};
+      // const result = await order.deleteMany(query);
       const result1 = productdetails.updateOne(
         {
-          name: data.itemname,
+          pname: data.itemname,
         },
         {
           $inc: {
@@ -79,6 +82,13 @@ async function run() {
     app.get("/advertise", async (req, res) => {
       const query = { advertise: "yes" };
       const result = await productdetails.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/saveuser", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await saveuser.insertOne(data);
       res.send(result);
     });
   } finally {
