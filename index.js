@@ -27,6 +27,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const allcategory = client.db("used-pc").collection("category");
+    const productdetails = client.db("used-pc").collection("product");
 
     app.get("/allcategory", async (req, res) => {
       const query = {};
@@ -35,10 +36,20 @@ async function run() {
     });
 
     app.get("/productdetails/:id", async (req, res) => {
-      const id = req.params.id;
-      //console.log(id);
+      let name = req.params.id;
 
-      res.send(id);
+      if (name[0] == "d") {
+        name = "D" + name.substring(1);
+      } else if (name[0] == "a") {
+        name = "A" + name.substring(1);
+      } else if (name[0] == "h") {
+        name = "H" + name.substring(1);
+      }
+
+      const query = { name: name };
+      // console.log(query);
+      const product = await productdetails.find(query).toArray();
+      res.send(product);
     });
   } finally {
   }
