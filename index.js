@@ -157,6 +157,13 @@ async function run() {
       const result = await productdetails.updateOne(query, update, options);
       res.send(result);
     });
+    app.get("/deleteproduct/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: ObjectId(id) };
+      const result = await productdetails.deleteOne(query);
+      res.send(result);
+    });
   } finally {
   }
 }
