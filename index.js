@@ -88,7 +88,7 @@ async function run() {
 
     app.post("/saveuser", async (req, res) => {
       const data = req.body;
-      console.log(data.email);
+      // console.log(data.email);
       const query = { name: data.email };
       const update = { $set: data };
       const options = { upsert: true };
@@ -108,18 +108,43 @@ async function run() {
 
     app.get("/myorder/:id", async (req, res) => {
       const email = req.params.id;
-      console.log(email);
+      //console.log(email);
       const query = { useremail: email };
       const result = await order.find(query).toArray();
       res.send(result);
     });
     app.post("/payment", async (req, res) => {
       const info = req.body;
-      console.log(info);
+      // console.log(info);
       const query = { itemname: info.itemname, userinfo: info.useremail };
       const update = { $set: info };
       const options = { upsert: true };
       const result = await user.updateOne(query, update, options);
+      res.send(result);
+    });
+
+    app.post("/updatepayment", async (req, res) => {
+      const info = req.body;
+      //console.log(info);
+      const query = {
+        $and: [{ itemname: info.itemname }, { useremail: info.useremail }],
+      };
+      const update = { $set: { status: "paid" } };
+      const options = { upsert: true };
+      const result = await order.updateOne(query, update, options);
+      res.send(result);
+    });
+    app.get("/sellerproduct/:id", async (req, res) => {
+      const email = req.params.id;
+      console.log(email);
+      const query = { email: email };
+      const result = await productdetails.find(query).toArray();
+      res.send(result);
+    });
+    app.post("/addproduct", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await productdetails.insertOne(data);
       res.send(result);
     });
   } finally {
