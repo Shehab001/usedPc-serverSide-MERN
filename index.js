@@ -29,7 +29,8 @@ async function run() {
     const allcategory = client.db("used-pc").collection("category");
     const productdetails = client.db("used-pc").collection("product");
     const order = client.db("used-pc").collection("order");
-    const saveuser = client.db("used-pc").collection("user");
+    const user = client.db("used-pc").collection("user");
+    const payment = client.db("used-pc").collection("payment");
 
     app.get("/allcategory", async (req, res) => {
       const query = {};
@@ -87,8 +88,38 @@ async function run() {
 
     app.post("/saveuser", async (req, res) => {
       const data = req.body;
-      console.log(data);
-      const result = await saveuser.insertOne(data);
+      console.log(data.email);
+      const query = { name: data.email };
+      const update = { $set: data };
+      const options = { upsert: true };
+      const result = await user.updateOne(query, update, options);
+
+      // const result = await user.insertOne(data);
+      res.send(result);
+    });
+
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      //console.log(id);
+      const query = { uid: id };
+      const usr = await user.find(query).toArray();
+      res.send(usr);
+    });
+
+    app.get("/myorder/:id", async (req, res) => {
+      const email = req.params.id;
+      console.log(email);
+      const query = { useremail: email };
+      const result = await order.find(query).toArray();
+      res.send(result);
+    });
+    app.post("/payment", async (req, res) => {
+      const info = req.body;
+      console.log(info);
+      const query = { itemname: info.itemname, userinfo: info.useremail };
+      const update = { $set: info };
+      const options = { upsert: true };
+      const result = await user.updateOne(query, update, options);
       res.send(result);
     });
   } finally {
