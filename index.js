@@ -1,12 +1,38 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+var jwt = require("jsonwebtoken");
+const {
+  MongoClient,
+  ServerApiVersion,
+  ObjectId,
+  ConnectionClosedEvent,
+} = require("mongodb");
 const query = require("express/lib/middleware/query");
 require("dotenv").config();
 
 const port = process.env.PORT || 5000;
 
 const app = express();
+const stripe = require("stripe")(
+  "sk_test_51LVKw8GSGClrvX9q7T97oJnASQEho0USM91MWBTKyIQj8sJMyqBUTjtzwvHZxgI5UQThfQ365RaTYwsHBJb9c17L00ilwp1Ynb"
+);
+
+// app.post("/create-payment-intent", async (req, res) => {
+//   const booking = req.body;
+//   const price = booking.price;
+//   const amount = price * 100;
+
+//   // Create a PaymentIntent with the order amount and currency
+//   const paymentIntent = await stripe.paymentIntents.create({
+//     amount: amount,
+//     currency: "usd",
+//     payment_methods_type: ["card"],
+//   });
+
+//   res.send({
+//     clientSecret: paymentIntent.client_secret,
+//   });
+// });
 
 //used-pc
 //S7LWJAfdHcg_Qup
@@ -33,7 +59,49 @@ async function run() {
     const user = client.db("used-pc").collection("user");
     const payment = client.db("used-pc").collection("payment");
 
-    app.get("/allcategory", async (req, res) => {
+    function jwtVerify(req, res, next) {
+      const token = req.headers.authorization.split(" ")[1];
+      if (!token) {
+        res.status(401).send({ message: "Unauthorized" });
+      }
+      // verify a token symmetric
+      jwt.verify(token, "SECRET", function (err, decoded) {
+        if (err) {
+          res.status(401).send({ message: "Unauthorized" });
+        }
+        req.decoded = decoded;
+        next();
+      });
+      // console.log(token);
+    }
+    app.post("/create-payment-intent", async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+      //console.log(amount);
+      //console.log(price);
+      if (price === undefined) {
+        return;
+      }
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.get("/allcategory", jwtVerify, async (req, res) => {
+      //console.log(req.headers.authorization);
+      /*const decoded = req.decoded;
+
+      if (decoded.email != req.query.email) {
+        res.status(401).send({ message: "Unauthorized" });
+      }
+      */
+      //console.log(decoded);
       const query = {};
       const category = await allcategory.find(query).toArray();
       res.send(category);
@@ -63,6 +131,13 @@ async function run() {
         .toArray();
       //const product = await productdetails.find(query).toArray();
       res.send(product);
+    });
+
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, "SECRET", { expiresIn: 50000 });
+      // console.log(token);
+      res.send({ token });
     });
 
     app.post("/order", async (req, res) => {
@@ -132,11 +207,13 @@ async function run() {
     });
     app.post("/payment", async (req, res) => {
       const info = req.body;
-      // console.log(info);
-      const query = { itemname: info.itemname, userinfo: info.useremail };
+      console.log(info);
+      const query = {
+        _id: ObjectId(info.id),
+      };
       const update = { $set: info };
       const options = { upsert: true };
-      const result = await payment.updateOne(query, update, options);
+      const result = await order.updateOne(query, update, options);
       res.send(result);
     });
 
@@ -216,5 +293,25 @@ run().catch(console.log);
 app.get("/", async (req, res) => {
   res.send("Used-pc server is running");
 });
+
+//others stripe method
+// app.post("/paymentstripe", async (req, res) => {
+//   let status, error;
+
+//   const { token, amount } = req.body;
+//   console.log(token.id, amount);
+//   try {
+//     await stripe.charges.create({
+//       source: token.id,
+//       amount,
+//       currency: "usd",
+//     });
+//     status = "success";
+//   } catch (err) {
+//     console.log(err);
+//     status = "200";
+//   }
+//   res.send(status);
+// });
 
 app.listen(port, () => console.log(`used-laptop running on ${port}`));
